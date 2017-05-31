@@ -1,0 +1,215 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="org.dodo.mybatis.BoardDAO"> 
+
+    <resultMap id="BoardMap" type="org.dodo.vo.BoardVO">
+    
+  	   <collection property="Blist" column="num" javaType="List" ofType="org.dodo.vo.BoardListVO">
+           <id property="num" column="num"/>
+           <result property="title" column="title"/>
+           <result property="contents" column="contents"/>
+           <result property="author" column="author"/>
+           <result property="bdate" column="bdate"/>
+           <result property="ref" column="ref"/>
+           <result property="goodcnt" column="goodcnt"/>
+           <result property="readcnt" column="readcnt"/>
+           <result property="fenabled" column="fenabled"/>
+           <result property="cat" column="hobby"/>
+           <result property="total" column="total"/>
+           <result property="page" column="page"/>
+       </collection>
+       
+        <collection property="Clist" column="ref" javaType="List" ofType="org.dodo.vo.BoardListVO">
+           <id property="ref" column="ref"/>
+           <result property="cnt" column="cnt"/>
+        </collection>
+       
+       <collection property="Bflist" column="num" javaType="List" ofType="org.dodo.vo.BfileVO">
+           <id property="num" column="num"/>
+           <result property="fname1" column="fname1"/>
+           <result property="fname2" column="fname2"/>
+           <result property="fsize" column="fsize"/>
+           <result property="fdate" column="bdate"/>
+       </collection>
+       
+     	<collection property="Nlist" column="anum" javaType="List" ofType="org.dodo.vo.NoticeVO">
+     		<id property="anum" column="anum"/>
+           <result property="atitle" column="atitle"/>
+           <result property="acontents" column="acontents"/>
+           <result property="adate" column="adate"/>
+           <result property="gm" column="gm"/>
+            <result property="total" column="total"/>
+             <result property="page" column="page"/>
+       </collection>
+       
+       
+       <collection property="Glist" column="num" javaType="List" ofType="org.dodo.vo.GoodVO">
+           <id property="num" column="num"/>
+           <result property="goodid" column="goodid"/>
+       </collection>
+       
+	</resultMap>
+	
+	
+<!-- 리스트+페이지네이션 -->
+   <select id="getBoardList"  parameterType="org.dodo.vo.BoardListVO"  resultMap="BoardMap">
+       <choose>
+          <when test="cat!=null">
+             select * from
+             (
+               select num, title, contents,author,bdate,goodcnt,readcnt,fenabled,hobby,
+               FLOOR((rownum-1)/10+1) page,rownum,ref,ceil(count(*) over()/10) total from
+               (
+                     (select num, title, contents,author,bdate,rownum,ref,goodcnt,readcnt,fenabled,hobby from mainboard 
+                        where hobby=#{cat} and ref=0 order by num desc)
+               )
+            )where page = #{page}
+          </when>
+         <otherwise>
+            select * from boardlist where page=#{page} and ref=0 order by num DESC
+         </otherwise>       
+       </choose>
+  </select> 
+<!-- 리스트+페이지네이션 -->
+
+<!-- 리스트읽기 -->
+  <select id="getRead"  parameterType="org.dodo.vo.BoardListVO" resultType="org.dodo.vo.BoardListVO">
+ 	select * from boardlist WHERE num=#{num}
+  </select>  
+<!-- 리스트읽기 -->
+	
+<!-- 글쓰기+댓글 -->
+<insert id="setWrite" parameterType="org.dodo.vo.BoardListVO">
+INSERT INTO mainboard(num,title,contents,author,bdate,ref,Hobby,fenabled) 
+VALUES (BOD_SQ_NUM.NEXTVAL,#{title},#{contents},#{author},sysdate,#{ref},#{cat},#{fenabled})
+</insert>
+<!-- 글쓰기+댓글 -->  
+
+<!-- 파일저장 -->
+<insert id="setFsave" parameterType="org.dodo.vo.BfileVO">
+INSERT INTO boardfile VALUES (#{fname1},#{fname2},#{fsize},sysdate,#{num})
+</insert>
+<!-- 파일저장--> 
+
+<!-- 최신글번호 -->
+  <select id="getMaxnum"  resultType="int">
+ 	select max(num) num from mainboard
+  </select>  
+<!-- 최신글번호 -->
+	
+<!--파일불러오기 -->
+  <select id="getBfile"  parameterType="org.dodo.vo.BoardListVO" resultMap="BoardMap">
+ 	select * from boardfile where num=#{num}
+  </select>  
+<!--파일불러오기 -->
+
+<!-- 수정 -->      
+  <update id="setEdit" parameterType="org.dodo.vo.BoardListVO">
+	UPDATE mainboard set title=#{title},contents=#{contents} WHERE num=#{num}
+  </update>
+<!-- 수정 -->   
+
+<!-- 글삭제 -->
+   <delete id="setDel" parameterType="org.dodo.vo.BoardListVO">
+	 delete from mainboard where num=#{num} and not exists (select num from mainboard where ref=#{num})
+   </delete>
+<!-- 글삭제 -->
+
+<!-- 댓글숫자 -->
+   <select id="getcommentcnt" resultMap="BoardMap">
+ 	 select ref,cnt from(select ref, count(*) cnt from mainboard group by ref)where ref !=0
+   </select>  
+<!-- 댓글숫자 -->
+
+<!-- 추천 -->      
+  <update id="setGoodcnt" parameterType="org.dodo.vo.GoodVO">
+	UPDATE mainboard set goodcnt=#{goodcnt} WHERE num=#{num}
+  </update>
+<!-- 추천-->  
+
+<!-- 조회수 -->      
+  <update id="setReadcnt" parameterType="org.dodo.vo.BoardListVO">
+	UPDATE mainboard set readcnt=#{readcnt} WHERE num=#{num}
+  </update>
+<!--조회수-->  
+
+<!-- 추천인저장 -->      
+	<insert id="setGoodid" parameterType="org.dodo.vo.GoodVO">
+		INSERT INTO GOOD VALUES (#{num},#{goodid})
+	</insert>
+<!-- 추천인저장-->  
+
+<!-- 추천인리스트 -->
+  <select id="getGoodlist"  resultMap="BoardMap">
+ 	select * from good where goodid = #{goodid}
+  </select>
+<!-- 추천인리스트 -->
+
+<!-- 댓글리스트 -->
+  <select id="getRipple"  resultMap="BoardMap">
+ 	select * from mainboard where ref = #{num}
+  </select>
+<!-- 댓글리스트 -->
+
+<!-- 검색 --> 
+<select id="getSearch" parameterType="org.dodo.vo.BoardListVO" resultMap="BoardMap">
+select * from
+(
+	select num, title, contents,author,bdate,goodcnt,readcnt,fenabled,hobby,FLOOR((rownum-1)/10+1) page,rownum,ref,ceil(count(*) over()/10) total from
+	(
+  	 (select num, title, contents,author,bdate,rownum,ref,goodcnt,readcnt,fenabled,hobby from mainboard  where ${searchS} like '%'||#{searchI}||'%' and ref=0 order by num desc)
+	)
+)where page = #{page}
+</select>
+<!-- 검색 -->
+
+<!-- 최신글6개(=메인용) -->
+  <select id="getgoodList" resultMap="BoardMap">
+	select num,title,contents,author,bdate,ref,goodcnt,hobby,readcnt,fenabled from(
+select num,title,contents,author,bdate,ref,goodcnt,hobby,readcnt,fenabled,rownum from
+(select * from mainboard where ref=0 order by goodcnt DESC)where rownum between 1 and 9)
+  </select> 
+<!-- 최신글6개(=메인용) -->
+
+<!-- 공지사항 -->
+   <select id="getNoticeBoard" resultMap="BoardMap">
+		select * from notice ORDER by adate desc
+   </select>  
+   
+   
+   <select id="getNotice" parameterType="org.dodo.vo.BoardListVO" resultMap="BoardMap">
+	select * from
+	(
+		select anum,atitle,acontents,adate,gm,FLOOR((rownum-1)/10+1)
+		page,rownum,ceil(count(*) over()/10) total from
+		(
+			(select anum,atitle,acontents,adate,gm,rownum from notice ORDER by adate desc)
+		)
+	)where page=#{page}
+   </select>  
+<!-- 공지사항 -->
+
+<!-- 공지사항읽기 -->
+  <select id="getNoticeRead"  parameterType="org.dodo.vo.NoticeVO" resultMap="BoardMap">
+ 	select * from notice WHERE anum=#{anum}
+  </select>  
+<!-- 공지사항읽기 -->
+
+<!-- 관심분야추가-->
+<insert id="setAddCat" parameterType="org.dodo.vo.BoardListVO">
+insert into hobbycategory(HOBBY,ID,hnum)
+values (#{cat},#{author},HOBBY_SQ_NUM.NEXTVAL)
+</insert>
+<!-- 관심분야추가 --> 
+
+<!-- 관심분야 제거 -->
+<delete id="setDelCat" parameterType="org.dodo.vo.BoardListVO">
+    delete from hobbycategory where HOBBY=#{cat} and ID=#{author} 
+ </delete>
+<!-- 관심분야 제거 -->
+
+</mapper>

@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<beans:beans xmlns="http://www.springframework.org/schema/mvc"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:beans="http://www.springframework.org/schema/beans"
+    xmlns:websocket="http://www.springframework.org/schema/websocket"
+    xmlns:mvc="http://www.springframework.org/schema/mvc" 
+    xmlns:context="http://www.springframework.org/schema/context"
+    xsi:schemaLocation="http://www.springframework.org/schema/mvc http://www.springframework.org/schema/mvc/spring-mvc.xsd
+        http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+        http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd
+        http://www.springframework.org/schema/websocket
+        http://www.springframework.org/schema/websocket/spring-websocket.xsd">
+
+  
+    <mvc:annotation-driven />
+
+    <context:component-scan base-package="org.dodo.cont" />
+    <context:component-scan base-package="org.dodo.svc" />
+    <context:component-scan base-package="org.dodo.vo" />
+    <context:component-scan base-package="org.dodo.mybatis" />
+
+
+    <resources mapping="/resources/**" location="/resources/" />
+
+ 
+
+    <beans:bean class="org.springframework.web.servlet.view.InternalResourceViewResolver">
+
+        <beans:property name="prefix" value="/WEB-INF/views/" />
+
+        <beans:property name="suffix" value=".jsp" />
+
+        <beans:property name="contentType" value="text/html; charset=UTF-8"/>
+
+    </beans:bean>
+    
+      
+	<beans:bean id="messageSource"
+		class="org.springframework.context.support.ResourceBundleMessageSource">
+		<beans:property name="basename" value="messages/messages" />
+
+	</beans:bean>
+	<beans:bean id="validator"
+		class="org.springframework.validation.beanvalidation.LocalValidatorFactoryBean" />
+	<beans:bean id="multipartResolver"
+		class="org.springframework.web.multipart.commons.CommonsMultipartResolver" />
+
+	<beans:bean id="mailSender"
+		class="org.springframework.mail.javamail.JavaMailSenderImpl">
+		<beans:property name="host" value="smtp.gmail.com" />
+		<beans:property name="port" value="25" />
+		<beans:property name="username" value="siaert00@gmail.com" />
+		<beans:property name="password" value="a14572290" />
+		<beans:property name="defaultEncoding" value="utf-8" />
+		<beans:property name="javaMailProperties">
+			<beans:props>
+				<beans:prop key="mail.smtp.starttls.enable">true</beans:prop>
+				<beans:prop key="mail.transport.protocol">smtp</beans:prop>
+				<beans:prop key="mail.smtp.auth">true</beans:prop>
+				<beans:prop key="mail.debug">true</beans:prop>
+			</beans:props>
+		</beans:property>
+	</beans:bean>
+	<!-- <interceptors> <interceptor> <mapping path="/send" /> <beans:bean class="org.dream.service.AuthInterceptor" 
+		/> </interceptor> </interceptors> <interceptors> <interceptor> <mapping path="/WebSocket" 
+		/> <beans:bean class="org.dodream.service.AuthInterceptor1" /> </interceptor> 
+		</interceptors> <beans:bean id="echoHandler" class="org.dodream.service.EchoHandler"/> 
+		<websocket:handlers> <websocket:mapping handler="echoHandler" path="/echo-ws" 
+		/> </websocket:handlers> <beans:bean id="chatHandler" class="org.dodream.service.ChatHandler"/> 
+		<websocket:handlers> <websocket:mapping handler="chatHandler" path="/chat-ws" 
+		/> <websocket:handshake-interceptors> <beans:bean class="org.dodream.service.WebsocketHandshakeInterceptor"/> 
+		</websocket:handshake-interceptors> </websocket:handlers> <beans:bean id="simpleChatHandler" 
+		class="org.dodream.service.SimpleWebSocketHandler"/> <websocket:handlers> 
+		<websocket:mapping path="/chat" handler="simpleChatHandler"/> <websocket:handshake-interceptors> 
+		<beans:bean class="org.dodream.service.HandshakeInterceptor"/> </websocket:handshake-interceptors> 
+		</websocket:handlers> -->
+
+
+	<beans:bean id="dataSource" class="oracle.jdbc.pool.OracleDataSource">
+		<beans:property name="dataSourceName" value="ds" />
+		<beans:property name="URL"
+			value="jdbc:oracle:thin:@localhost:1521:xe" />
+		<beans:property name="user" value="scott" />
+		<beans:property name="password" value="TIGER" />
+	</beans:bean>
+
+	<beans:bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
+		<beans:property name="mapperLocations"
+			value="classpath*:org/dodo/mybatis/*.xml" />
+		<beans:property name="dataSource" ref="dataSource" />
+	</beans:bean>
+
+	<beans:bean id="sqlSessionTemplate" class="org.mybatis.spring.SqlSessionTemplate">
+		<beans:constructor-arg index="0" ref="sqlSessionFactory" />
+	</beans:bean>
+
+</beans:beans> 

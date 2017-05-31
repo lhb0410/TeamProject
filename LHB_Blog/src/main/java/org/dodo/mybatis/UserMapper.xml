@@ -1,0 +1,196 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="org.dodo.mybatis.UserDAO">
+
+	<resultMap id="User" type="org.dodo.vo.UserVO">
+		<result property="num" column="unum"/>
+		<result property="id" column="id" />
+		<result property="pwd" column="pwd" />
+		<result property="name" column="name" />
+		<result property="email" column="email" />
+		<result property="que" column="question" />
+		<result property="ans" column="answer" />
+		<result property="phone" column="phone" />
+		<result property="regdate" column="joindate" />
+		<result property="authority" column="authority" />
+		<result property="enabled" column="enabled" />
+		
+		
+		<collection property="ufList" column="fnum" javaType="ArrayList"
+			ofType="org.dodo.vo.UfileVO">
+			<id property="num" column="fnum" />
+			<result property="id" column="id" />
+			<result property="ufdate" column="udate" />
+			<result property="ufsize" column="ufsize" />
+			<result property="ufname1" column="ufname1" />
+			<result property="ufname2" column="ufname2" />
+		</collection>
+
+		<collection property="cList" column="hnum" javaType="ArrayList"
+			ofType="org.dodo.vo.CategoryVO">
+			<id property="num" column="hnum" />
+			<result property="hobby" column="hobby" />
+			<result property="id" column="id" />
+		</collection>
+		
+		<collection property="ubList" column="unum" javaType="ArrayList"
+			ofType="org.dodo.vo.UserBoardVO">
+			<id property="num" column="unum" />
+			<result property="masterid" column="id" />
+			<result property="author" column="gbauthor" />
+			<result property="title" column="gbtitle" />
+			<result property="bdate" column="gbdate" />
+			<result property="uref" column="uref" />
+			<result property="secretnum" column="secretvalue" />
+		</collection>
+
+		<collection property="uList" column="unum" javaType="ArrayList"
+			ofType="org.dodo.vo.UListVO">
+			<id property="num" column="unum" />
+			<result property="id" column="id" />
+			<result property="pwd" column="pwd" />
+			<result property="name" column="name" />
+			<result property="email" column="email" />
+			<result property="que" column="question" />
+			<result property="ans" column="answer" />
+			<result property="hobby" column="hobby" />
+			<result property="phone" column="phone" />
+			<result property="regdate" column="joindate" />
+			<result property="authority" column="authority" />
+			<result property="enabled" column="enabled" />
+		</collection>
+</resultMap>
+
+
+
+	<insert id="setUserSave" parameterType="org.dodo.vo.UserVO">
+		insert into boarduser
+		(UNUM, ID,PWD,NAME,EMAIL,QUESTION,ANSWER,HOBBY,PHONE,JOINDATE,AUTHORITY,ENABLED)
+		values (USER_SQ_NUM.nextval, #{id}, #{pwd},#{name},#{email},#{que},#{ans},#{hobby},#{phone},sysdate,#{authority},#{enabled})
+	</insert>
+
+	<select id="getUserIdFind" parameterType="org.dodo.vo.UserVO"
+		resultMap="User">
+		select id from boarduser where name=#{name} and
+		email=#{email}
+	</select>
+
+	<update id="getUserPwdFind" parameterType="org.dodo.vo.UserVO">
+		UPDATE boarduser set
+		pwd = #{pwd} WHERE question=#{que} and
+		answer=#{ans} and id=#{id} and
+		email=#{email}
+	</update>
+
+	<select id="getIdCheck" parameterType="String" resultType="org.dodo.vo.UserVO">
+		SELECT NVL(max(id), 'false') id FROM boarduser WHERE id = #{id}
+	</select>
+
+	<select id="getUserModify" parameterType="String" resultMap="User">
+		SELECT ID,NAME,EMAIL,QUESTION,ANSWER,PHONE FROM
+		boarduser WHERE id = #{id}
+	</select>
+	
+	<select id="getUserPwd" parameterType="org.dodo.vo.UserVO" resultMap="User">
+		SELECT pwd from boarduser where unum = #{num}
+	</select>
+	
+	<select id="getUserNum" parameterType="String" resultMap="User">
+		SELECT UNUM FROM boarduser WHERE id = #{id}
+	</select>
+	
+	<update id="getUserDrawal" parameterType="HashMap">
+		UPDATE boarduser set enabled = 0 WHERE id=#{id} and pwd=#{pwd}
+	</update>
+    
+    <update id="setNewPwdChange" parameterType="org.dodo.vo.UserVO">
+		UPDATE boarduser set pwd=#{pwd} WHERE id=#{id}
+	</update>
+	
+	<update id="getUserModf" parameterType="org.dodo.vo.UserVO">
+		 MERGE INTO boarduser a
+         USING dual
+         on(a.id = #{id}) 
+         WHEN MATCHED THEN
+         UPDATE SET
+         a.question = #{que},
+         a.answer = #{ans},
+         a.name = #{name},
+         a.email = #{email},
+         a.phone = #{phone}
+	</update>
+	
+	<insert id="setUserHobby" parameterType="HashMap">
+		insert into hobbycategory(HOBBY,ID,hnum)
+		values (#{hobby},#{id},HOBBY_SQ_NUM.NEXTVAL)
+	</insert>
+	
+	<select id="getHobbyList" parameterType="String" resultType="org.dodo.vo.CategoryVO">
+		select hobby from hobbycategory where id = #{id}
+	</select> 
+  <!--   <insert id="boardSave" parameterType="org.dream.vo.BoardVO">
+        insert into BOARDTEXT (bnum, OWNER, TITLE, CONTENTS,bdate,ref) 
+        values (BP_SQ1_NUM.nextval, #{owner}, #{title}, #{contents}, sysdate,#{ref})
+    </insert>
+    
+    <select id="getRecent" parameterType="String" resultMap="BoardPro1">
+       select bnum,owner,title,bdate,ref,contents from boardtext where bnum=(select max(bnum) from boardtext) and owner = #{owner}
+    </select>
+    
+     <insert id="fileSave" parameterType="org.dream.vo.DownloadVO">
+        insert into BOARDFILE(FNUM, OWNER,FNAME,FNAME1,FSIZE,FDATE) 
+        values (#{num},#{owner},#{fname}, #{fname1},#{fsize},sysdate)
+    </insert>
+    
+     <select id="getBoardList" parameterType="int" resultMap="BoardList">
+       select * from view_board_pro where page = #{num} 
+     </select>
+     
+     <select id="getBoardPage" parameterType="int" resultMap="BoardList">
+       select * from view_board_pro where page = #{page} 
+    </select>
+    
+    <select id="getBoardRead" parameterType="int" resultMap="BoardPro1">
+       select * from view_board_pro where bnum = #{readnum} 
+    </select>
+    
+    <select id="getBoardFileread"  parameterType="int"  resultMap="BoardList">
+ 	   select fname,fsize from boardtext b inner join boardfile f on b.bnum = f.fnum where f.fnum = #{readnum}
+  	</select> 
+  	
+  	<insert id="setBoardReple" parameterType="org.dream.vo.BoardVO">
+        insert into BOARDTEXT (bnum, OWNER, TITLE, CONTENTS,bdate,ref) 
+        values (BP_SQ1_NUM.nextval, #{owner}, #{title}, #{contents}, sysdate,#{ref})
+    </insert>
+    
+    <delete id="setBoardDel" >
+	    DELETE FROM boardtext WHERE bnum=#{delnum} AND 
+	    NOT EXISTS (SELECT bnum FROM boardtext WHERE ref=#{delnum})
+	</delete>
+    
+    <update id="setBoardEdit" parameterType="org.dream.vo.BoardVO">
+	    UPDATE BOARDTEXT set title=#{title},contents=#{contents} WHERE bnum=#{num}
+    </update>
+ 	
+ 	<select id="getBoardSearch" parameterType="HashMap"  resultMap="BoardList">
+ 	 	<if test ="category != null and category =='owner'">
+			SELECT * FROM boardtext WHERE owner = #{keyword}
+    	</if>
+    	<if test ="category != null and category =='title'">
+			SELECT * FROM boardtext WHERE title like '%'||#{keyword}||'%'
+    	</if>
+    	<if test ="category != null and category =='contents'">
+			SELECT * FROM boardtext WHERE contents like '%'||#{keyword}||'%'
+    	</if>
+  	</select> 
+   	
+   	<update id="setBoardGood" parameterType="org.dream.vo.BoardVO">
+   		<if test = "">
+	    UPDATE BOARDTEXT set countuser=#{countuser},goodcount=#{goodcunt} WHERE bnum=#{num}
+	    </if>
+    </update> -->
+</mapper>
