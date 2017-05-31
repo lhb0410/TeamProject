@@ -434,7 +434,7 @@ margin: 0px auto; margin-top: 10px;
                   </div>
 <div class="conteiner">
  <hr> 
-<table id="table" class="table table-condensed">
+<table id="table" class="table table-striped">
 <thead><tr><th class="th1">글번호</th><th class="th1">카테고리</th><th class="th1">작성자</th><th class="titleList">글 제 목</th><th class="th1">추천</th><th class="th1">조회</th><th class="th1">첨부</th></tr></thead>
 <tbody>
 <c:forEach var="list" items="${list}">
